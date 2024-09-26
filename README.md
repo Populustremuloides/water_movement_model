@@ -25,9 +25,38 @@ The **Water Movement Model** simulates the storage and flow of water within a ba
 ## Project Structure
 
 ```
+# Water Movement Model
+
+## Overview
+
+The **Water Movement Model** is a computational tool designed to simulate and analyze the flow of water through drainage basins. By leveraging hydrological data such as flow rates, temperature, precipitation, evapotranspiration (ET), and potential evapotranspiration (PET), the model employs nonlinear least squares regression to fit parameters that describe water storage and movement within a basin. This simulation aids in understanding hydrological processes, predicting water availability, and managing water resources effectively.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Background](#background)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Model Equations](#model-equations)
+- [Results](#results)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+## Background
+
+Hydrology, the study of water movement, distribution, and quality in the Earth's atmosphere and surface, plays a crucial role in environmental management, agriculture, and urban planning. Understanding how water moves through drainage basins helps in predicting floods, managing water resources, and assessing the impacts of climate change.
+
+The **Water Movement Model** simulates the storage and flow of water within a basin using a set of mathematical equations derived from hydrological principles. By fitting these equations to observed data, the model estimates parameters that characterize the basin's response to various hydrological inputs.
+
+## Project Structure
+
+````plaintext
 water_movement_model/
 ├── configs
-│   └── default_config.yaml
+│   ├── config_trf.yaml
+│   ├── config_dogbox.yaml
+│   └── config_lm.yaml
 ├── data
 │   ├── basin_1749100.csv
 │   └── basin_4136300.csv
@@ -46,6 +75,7 @@ water_movement_model/
 │   └── utils.py
 ├── run_all.sh
 └── README.md
+
 ```
 
 - **configs/**: Contains configuration files defining parameter bounds and optimization settings.
