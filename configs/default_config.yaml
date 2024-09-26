@@ -1,0 +1,21 @@
+# configs/default_config.yaml
+
+optimization:
+  method: "linear"  # Options: huber, soft_l1, etc.
+  loss_function:
+    L1_weight: 1.0
+    L2_weight: 0.1
+  bounds:
+    lower: [0, 0, 0, 0, 0, 0, 0, 0, 0]  # 9 elements for theta0 to theta6, w0, m
+    upper: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 5, 0.5]  # 9 elements
+  initial_guess:
+    mean: 0
+    std: 1
+
+plot:
+  save: true
+  format: "png"
+
+output:
+  directory: "results"
+
