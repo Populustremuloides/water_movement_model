@@ -104,14 +104,14 @@ Ensure that your basin CSV files are placed in the `data/` directory. Each CSV f
 
 ## Usage
 
-The project includes a shell script `run_all.sh` to process all basin data files in batch. This script utilizes the default configuration file for all basins.
+The project includes shell scripts, such as `run_all_lm.sh`, to process all basin data files in batch. This script utilizes the default configuration file for all basins.
 
 ### Running the Batch Script
 
 1. **Ensure the Script is Executable**
 
    ```bash
-   chmod +x run_all.sh
+   chmod +x run_all_lm.sh
    ```
 
 2. **Execute the Script**
@@ -119,7 +119,7 @@ The project includes a shell script `run_all.sh` to process all basin data files
    Run the script from the **project root directory**:
 
    ```bash
-   ./run_all.sh
+   ./run_all_lm.sh
    ```
 
    The script will process each basin CSV file, fit the model parameters, and save the results in the `results/` directory.

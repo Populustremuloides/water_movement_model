@@ -1,0 +1,14 @@
+# configs/config_trf.yaml
+
+optimization:
+  method: "trf"        # Trust Region Reflective algorithm
+  loss: "huber"        # Choose from 'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'
+  initial_guess: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # Initial guesses for theta0 to theta6, w0, m
+
+plot:
+  save: true
+  format: "png"
+
+output:
+  directory: "results"
+

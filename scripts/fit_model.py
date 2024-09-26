@@ -87,7 +87,7 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Fit water movement model to drainage basin data.")
     parser.add_argument('--input_file', type=str, required=True, help="Path to the basin CSV data file.")
-    parser.add_argument('--config_file', type=str, default="configs/default_config.yaml", help="Path to the config YAML file.")
+    parser.add_argument('--config_file', type=str, required=True, help="Path to the config YAML file.")
     parser.add_argument('--output_dir', type=str, required=True, help="Directory to save the results.")
     args = parser.parse_args()
 
@@ -102,13 +102,15 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Extract optimization settings
-    L1_weight = optimization_config.get('loss_function', {}).get('L1_weight', 1.0)
-    L2_weight = optimization_config.get('loss_function', {}).get('L2_weight', 0.1)
-    bounds = optimization_config.get('bounds', {})
-    lower_bounds = bounds.get('lower', [0]*7)
-    upper_bounds = bounds.get('upper', [100]*7)
-    initial_guess_mean = optimization_config.get('initial_guess', {}).get('mean', 0)
-    initial_guess_std = optimization_config.get('initial_guess', {}).get('std', 1)
+    method = optimization_config.get('method', 'trf')        # Default to 'trf' if not specified
+    loss = optimization_config.get('loss', 'linear')         # Default to 'linear' if not specified
+    initial_guess = optimization_config.get('initial_guess', None)  # Should be a list of 9 numbers
+
+    if initial_guess is None or len(initial_guess) != 9:
+        logging.error("Initial guess for parameters must be provided and contain exactly 9 values.")
+        sys.exit(1)
+
+    theta_0 = np.array(initial_guess)
 
     # Load and preprocess data
     input_file_path = os.path.join(project_root, args.input_file)
@@ -119,29 +121,23 @@ def main():
     ET = data['ET']
     PET = data['PET']
 
-    # Convert lower and upper bounds to numpy arrays for vectorized operations
-    lower_bounds = np.array(lower_bounds)
-    upper_bounds = np.array(upper_bounds)
-
-    # Set to always estimate w0 and m
-    # Total parameters: thetas_model (7) + w0 (1) + m (1) = 9
+    # Determine the number of parameters
     n_thetas_model = 7
     n_additional_params = 2  # w0 and m
     n_params = n_thetas_model + n_additional_params
 
-    # Validate that bounds match the number of parameters
-    if len(lower_bounds) != n_params or len(upper_bounds) != n_params:
-        logging.error(f"Bounds length {len(lower_bounds)} or {len(upper_bounds)} do not match n_params {n_params}")
+    # Define bounds based on the method
+    # Since we are removing bounds, we set them to (-inf, inf) for methods that support it
+    if method in ['trf', 'dogbox']:
+        bounds_tuple = (-np.inf, np.inf)
+    elif method == 'lm':
+        bounds_tuple = None  # 'lm' does not support bounds
+    else:
+        logging.error(f"Unsupported optimization method: {method}")
         sys.exit(1)
-
-    # Initial guess: sample uniformly within bounds to ensure feasibility
-    theta_0 = np.random.uniform(low=lower_bounds, high=upper_bounds, size=n_params)
 
     # Log the initial guess
     logging.info(f"Initial guess (theta_0): {theta_0}")
-
-    # Define bounds as a tuple for least_squares
-    bounds_tuple = (lower_bounds, upper_bounds)
 
     # Define residual function for least_squares
     def residual_func(thetas):
@@ -150,19 +146,34 @@ def main():
         w0 = thetas[n_thetas_model]
         m = thetas[n_thetas_model + 1]
         logging.debug(f"thetas_model: {thetas_model}, w0: {w0}, m: {m}")
-        logging.debug(f"thetas_model size: {thetas_model.size}, w0 size: {w0}, m size: {m}")
         return getResidual(thetas_model, m, precip, PET, temp, w0, flow)
 
     # Perform optimization
     logging.info("Starting optimization...")
     try:
-        result = least_squares(
-            residual_func,
-            theta_0,
-            method='trf',  # Trust Region Reflective algorithm
-            loss=optimization_config.get('method', 'huber'),
-            bounds=bounds_tuple
-        )
+        if method in ['trf', 'dogbox']:
+            result = least_squares(
+                residual_func,
+                theta_0,
+                method=method,
+                loss=loss,
+                bounds=bounds_tuple,
+                ftol=1e-08,
+                xtol=1e-08,
+                gtol=1e-08,
+                max_nfev=1000
+            )
+        elif method == 'lm':
+            result = least_squares(
+                residual_func,
+                theta_0,
+                method=method,
+                loss=loss,
+                ftol=1e-08,
+                xtol=1e-08,
+                gtol=1e-08,
+                max_nfev=1000
+            )
     except Exception as e:
         logging.error(f"Optimization failed: {e}")
         sys.exit(1)
